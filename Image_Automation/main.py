@@ -1,24 +1,59 @@
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from geminiImage import image_to_gemini
 from fetchPhotos import fetch_photos
 from playwright.sync_api import sync_playwright
 import time
 import shutil
+import platform
 import os
 
-CHROME_USER_DATA   = r"C:\Users\Jay\AppData\Local\Google\Chrome\User Data"
-PLAYWRIGHT_PROFILE = r"C:\Users\Jay\AppData\Local\Google\Chrome\PlaywrightProfile"
+# CHROME_USER_DATA   = r"C:\Users\Jay\AppData\Local\Google\Chrome\User Data"
+# PLAYWRIGHT_PROFILE = r"C:\Users\Jay\AppData\Local\Google\Chrome\PlaywrightProfile"
 PHOTOS_DIR         = os.path.join(os.path.dirname(__file__), "photos")
 IMAGE_EXTENSIONS   = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
 
+def get_chrome_user_data_dir():
+    """Dynamically resolves the system-specific Google Chrome User Data path."""
+    home = os.path.expanduser("~")
+    system = platform.system()
+    
+    if system == "Windows":
+        # Resolves to C:\Users\<Username>\AppData\Local\Google\Chrome\User Data
+        return os.path.join(os.environ.get("LOCALAPPDATA", os.path.join(home, "AppData", "Local")), "Google", "Chrome", "User Data")
+    elif system == "Darwin":  # macOS
+        return os.path.join(home, "Library", "Application Support", "Google", "Chrome")
+    elif system == "Linux":
+        return os.path.join(home, ".config", "google-chrome")
+    else:
+        raise OSError(f"Unsupported operating system: {system}")
+    
+CHROME_USER_DATA = get_chrome_user_data_dir()
+PLAYWRIGHT_PROFILE = os.path.join(os.path.dirname(__file__), "PlaywrightProfile")
+    
 def setup_profile():
     """One-time copy of the Chrome Default profile into the Playwright profile dir."""
     dst = os.path.join(PLAYWRIGHT_PROFILE, "Default")
+    src = os.path.join(CHROME_USER_DATA, "Default")
+    
     if not os.path.exists(dst):
+        # Safety check: Ensure Chrome is actually installed on the target machine
+        if not os.path.exists(src):
+            print(f"Error: Chrome 'Default' profile not found at {src}")
+            print("Please ensure Google Chrome is installed and has been opened at least once.")
+            return PLAYWRIGHT_PROFILE
+            
         print("First run: copying Chrome profile (one-time setup)...")
-        shutil.copytree(os.path.join(CHROME_USER_DATA, "Default"), dst)
-        print("Profile ready!")
+        try:
+            shutil.copytree(src, dst)
+            print("Profile ready!")
+        except Exception as e:
+            print(f"Failed to copy Chrome profile: {e}")
     else:
         print("Using existing Playwright profile.")
+    
+    return PLAYWRIGHT_PROFILE
 
 def getPhotos():
     """Return the first unprocessed image path from photos/."""

@@ -2,6 +2,7 @@ from nicegui import ui, app
 import os
 import time
 from pymongo import MongoClient
+from Image_Automation.main import setup_profile
 from Image_Automation.geminiImage import image_to_gemini
 from playwright.sync_api import sync_playwright
 import asyncio
@@ -19,7 +20,7 @@ except Exception as e:
 # Directories
 UPLOADS_DIR = os.path.join(os.path.dirname(__file__), "uploads")
 os.makedirs(UPLOADS_DIR, exist_ok=True)
-PLAYWRIGHT_PROFILE = r"C:\Users\Jay\AppData\Local\Google\Chrome\PlaywrightProfile"
+# PLAYWRIGHT_PROFILE = r"C:\Users\Jay\AppData\Local\Google\Chrome\PlaywrightProfile"
 
 # Global Light Mode Styling Override
 ui.add_head_html('''
@@ -47,10 +48,11 @@ async def require_login(request: Request, call_next):
 
 # --- Helper: Generate Image ---
 def run_playwright_generator(image_path, prompt):
+    target_profile_path = setup_profile()
     try:
         with sync_playwright() as p:
             context = p.chromium.launch_persistent_context(
-                user_data_dir=PLAYWRIGHT_PROFILE,
+                user_data_dir=target_profile_path,
                 channel="chrome",
                 headless=True,
                 args=[
