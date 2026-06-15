@@ -4,6 +4,7 @@ import time
 from pymongo import MongoClient
 from Image_Automation.main import setup_profile
 from Image_Automation.geminiImage import image_to_gemini
+from Image_Automation.openaiImage import image_to_openai
 from playwright.sync_api import sync_playwright
 import asyncio
 
@@ -64,7 +65,7 @@ def run_playwright_generator(image_path, prompt):
             )
             page = context.new_page()
             try:
-                saved_path = image_to_gemini(page, image_path, prompt)
+                saved_path = image_to_openai(page, image_path, prompt)
                 return saved_path
             finally:
                 context.close()

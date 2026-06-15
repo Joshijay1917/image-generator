@@ -2,6 +2,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from geminiImage import image_to_gemini
+from openaiImage import image_to_openai
 from fetchPhotos import fetch_photos
 from playwright.sync_api import sync_playwright
 import time
@@ -30,7 +31,7 @@ def get_chrome_user_data_dir():
         raise OSError(f"Unsupported operating system: {system}")
     
 CHROME_USER_DATA = get_chrome_user_data_dir()
-PLAYWRIGHT_PROFILE = os.path.join(os.path.dirname(__file__), "PlaywrightProfile")
+PLAYWRIGHT_PROFILE = os.path.join(os.path.dirname(__file__), get_chrome_user_data_dir(), "../PlayWrightProfile")
     
 def setup_profile():
     """One-time copy of the Chrome Default profile into the Playwright profile dir."""
@@ -77,7 +78,7 @@ def main():
         context = p.chromium.launch_persistent_context(
             user_data_dir=PLAYWRIGHT_PROFILE,
             channel="chrome",
-            headless=True,
+            headless=False,
             args=[
                 "--disable-blink-features=AutomationControlled",
                 "--no-first-run",
@@ -99,7 +100,7 @@ def main():
                 context.close()
                 return
 
-            saved = image_to_gemini(page, image_path=photo_process, prompt="give me a new t-shirt image from this")
+            saved = image_to_openai(page, image_path=photo_process, prompt="give me a new t-shirt image from this")
 
             if saved:
                 print(f"\nDone! Generated image saved to: {saved}")
