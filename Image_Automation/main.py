@@ -100,7 +100,7 @@ def main():
                 context.close()
                 return
 
-            saved = image_to_openai(page, image_path=photo_process, prompt="give me a new t-shirt image from this")
+            saved = image_to_gemini(page, image_path=photo_process, prompt="give me a new t-shirt image from this")
 
             if saved:
                 print(f"\nDone! Generated image saved to: {saved}")
